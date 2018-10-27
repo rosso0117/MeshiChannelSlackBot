@@ -1,0 +1,797 @@
+{
+    "definition": {
+        "$schema": "https://schema.management.azure.com/providers/Microsoft.Logic/schemas/2016-06-01/workflowdefinition.json#",
+        "actions": {
+            "AnalyzeFormDataJSON": {
+                "inputs": {
+                    "content": "@body('FilterByKeyIsText')",
+                    "schema": {
+                        "items": {
+                            "properties": {
+                                "key": {
+                                    "type": "string"
+                                },
+                                "value": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "key",
+                                "value"
+                            ],
+                            "type": "object"
+                        },
+                        "type": "array"
+                    }
+                },
+                "runAfter": {
+                    "FilterByKeyIsText": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "FilterByKeyIsText": {
+                "inputs": {
+                    "from": "@triggerBody()?['$formdata']",
+                    "where": "@equals(item()?['key'], 'text')"
+                },
+                "runAfter": {},
+                "type": "Query"
+            },
+            "HTTP": {
+                "inputs": {
+                    "method": "GET",
+                    "queries": {
+                        "areacode_s": "AREAS2210",
+                        "category_l": "@variables('categoryLCode')",
+                        "category_s": "@variables('categorySCode')",
+                        "input_coordinates_mode": "2",
+                        "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e",
+                        "latitude": "35.6828072",
+                        "longitude": "139.6866205",
+                        "range": "2"
+                    },
+                    "uri": "https://api.gnavi.co.jp/RestSearchAPI/v3/"
+                },
+                "runAfter": {
+                    "大業態マスタの検索結果が存在するか": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "JSON_の解析": {
+                "inputs": {
+                    "content": "@body('HTTP')",
+                    "schema": {
+                        "properties": {
+                            "@@attributes": {
+                                "properties": {
+                                    "api_version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "hit_per_page": {
+                                "type": "integer"
+                            },
+                            "page_offset": {
+                                "type": "integer"
+                            },
+                            "rest": {
+                                "items": {
+                                    "properties": {
+                                        "@@attributes": {
+                                            "properties": {
+                                                "order": {
+                                                    "type": "integer"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "access": {
+                                            "properties": {
+                                                "line": {
+                                                    "type": "string"
+                                                },
+                                                "note": {
+                                                    "type": "string"
+                                                },
+                                                "station": {
+                                                    "type": "string"
+                                                },
+                                                "station_exit": {
+                                                    "type": "string"
+                                                },
+                                                "walk": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "address": {
+                                            "type": "string"
+                                        },
+                                        "category": {
+                                            "type": "string"
+                                        },
+                                        "code": {
+                                            "properties": {
+                                                "areacode": {
+                                                    "type": "string"
+                                                },
+                                                "areacode_s": {
+                                                    "type": "string"
+                                                },
+                                                "areaname": {
+                                                    "type": "string"
+                                                },
+                                                "areaname_s": {
+                                                    "type": "string"
+                                                },
+                                                "category_code_l": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "category_code_s": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "category_name_l": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "category_name_s": {
+                                                    "items": {
+                                                        "type": "string"
+                                                    },
+                                                    "type": "array"
+                                                },
+                                                "prefcode": {
+                                                    "type": "string"
+                                                },
+                                                "prefname": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "coupon_url": {
+                                            "properties": {
+                                                "mobile": {
+                                                    "type": "string"
+                                                },
+                                                "pc": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "holiday": {
+                                            "type": "string"
+                                        },
+                                        "id": {
+                                            "type": "string"
+                                        },
+                                        "image_url": {
+                                            "properties": {
+                                                "qrcode": {
+                                                    "type": "string"
+                                                },
+                                                "shop_image1": {
+                                                    "type": "string"
+                                                },
+                                                "shop_image2": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "latitude": {
+                                            "type": "string"
+                                        },
+                                        "longitude": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "name_kana": {
+                                            "type": "string"
+                                        },
+                                        "opentime": {
+                                            "type": "string"
+                                        },
+                                        "tel": {
+                                            "type": "string"
+                                        },
+                                        "tel_sub": {
+                                            "type": "string"
+                                        },
+                                        "update_date": {
+                                            "type": "string"
+                                        },
+                                        "url": {
+                                            "type": "string"
+                                        },
+                                        "url_mobile": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "@@attributes",
+                                        "id",
+                                        "update_date",
+                                        "name",
+                                        "name_kana",
+                                        "latitude",
+                                        "longitude",
+                                        "category",
+                                        "url",
+                                        "url_mobile",
+                                        "address",
+                                        "tel",
+                                        "tel_sub",
+                                        "opentime",
+                                        "holiday",
+                                        "access"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            },
+                            "total_hit_count": {
+                                "type": "integer"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "HTTP": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "initialize_CategorySName": {
+                "inputs": {
+                    "variables": [{
+                        "name": "categorySName",
+                        "type": "String",
+                        "value": "Unused"
+                    }]
+                },
+                "runAfter": {
+                    "initialize_categoryLName": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "initialize_FoundCategorySExactly": {
+                "inputs": {
+                    "variables": [{
+                        "name": "FoundCategorySExactly",
+                        "type": "Boolean",
+                        "value": false
+                    }]
+                },
+                "runAfter": {
+                    "initialize_CategorySName": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "initialize_categoryLCode": {
+                "inputs": {
+                    "variables": [{
+                        "name": "categoryLCode",
+                        "type": "String"
+                    }]
+                },
+                "runAfter": {
+                    "searchword": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "initialize_categoryLName": {
+                "inputs": {
+                    "variables": [{
+                        "name": "categoryLName",
+                        "type": "String",
+                        "value": "Unused"
+                    }]
+                },
+                "runAfter": {
+                    "initialize_categorySCode": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "initialize_categorySCode": {
+                "inputs": {
+                    "variables": [{
+                        "name": "categorySCode",
+                        "type": "String"
+                    }]
+                },
+                "runAfter": {
+                    "initialize_categoryLCode": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "initialize_textwordObject": {
+                "inputs": {
+                    "variables": [{
+                        "name": "textObject",
+                        "type": "Object",
+                        "value": "@first(body('AnalyzeFormDataJSON'))"
+                    }]
+                },
+                "runAfter": {
+                    "AnalyzeFormDataJSON": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "searchword": {
+                "inputs": {
+                    "variables": [{
+                        "name": "searchword",
+                        "type": "String",
+                        "value": "@{split(variables('textObject').value, ' ')[1]}"
+                    }]
+                },
+                "runAfter": {
+                    "initialize_textwordObject": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "レストラン一覧の最大Index獲得": {
+                "inputs": {
+                    "variables": [{
+                        "name": "restMaxIndex",
+                        "type": "Integer",
+                        "value": "@sub(length(variables('rest')),1)"
+                    }]
+                },
+                "runAfter": {
+                    "配列のフィルター処理": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "レストラン一覧を配列に": {
+                "inputs": {
+                    "variables": [{
+                        "name": "rest",
+                        "type": "Array",
+                        "value": "@body('JSON_の解析')?['rest']"
+                    }]
+                },
+                "runAfter": {
+                    "JSON_の解析": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "乱数生成": {
+                "inputs": {
+                    "variables": [{
+                        "name": "rndInt",
+                        "type": "Integer",
+                        "value": "@rand(0,variables('restMaxIndex'))"
+                    }]
+                },
+                "runAfter": {
+                    "レストラン一覧の最大Index獲得": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "今日の店を取得": {
+                "inputs": {
+                    "variables": [{
+                        "name": "todayRest",
+                        "type": "Object",
+                        "value": "@variables('rest')[variables('rndInt')]"
+                    }]
+                },
+                "runAfter": {
+                    "乱数生成": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
+            "大業態マスタJSONの解析": {
+                "inputs": {
+                    "content": "@body('大業態マスタ取得')",
+                    "schema": {
+                        "properties": {
+                            "@@attributes": {
+                                "properties": {
+                                    "api_version": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            },
+                            "category_l": {
+                                "items": {
+                                    "properties": {
+                                        "category_l_code": {
+                                            "type": "string"
+                                        },
+                                        "category_l_name": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "category_l_code",
+                                        "category_l_name"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "runAfter": {
+                    "大業態マスタ取得": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "ParseJson"
+            },
+            "大業態マスタから検索結果を抽出": {
+                "inputs": {
+                    "from": "@body('大業態マスタJSONの解析')?['category_l']",
+                    "where": "@contains(item()?['category_l_name'], variables('searchword'))"
+                },
+                "runAfter": {
+                    "大業態マスタJSONの解析": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Query"
+            },
+            "大業態マスタの検索結果が存在するか": {
+                "actions": {
+                    "For_each": {
+                        "actions": {
+                            "set_categoryLCode": {
+                                "inputs": {
+                                    "name": "categoryLCode",
+                                    "value": "@{item().category_l_code}"
+                                },
+                                "runAfter": {},
+                                "type": "SetVariable"
+                            },
+                            "set_categoryLName": {
+                                "inputs": {
+                                    "name": "categoryLName",
+                                    "value": "@{item().category_l_name}"
+                                },
+                                "runAfter": {
+                                    "set_categoryLCode": [
+                                        "Succeeded"
+                                    ]
+                                },
+                                "type": "SetVariable"
+                            }
+                        },
+                        "foreach": "@body('大業態マスタから検索結果を抽出')",
+                        "runAfter": {},
+                        "type": "Foreach"
+                    }
+                },
+                "else": {
+                    "actions": {
+                        "小業態マスタJSONの解析": {
+                            "inputs": {
+                                "content": "@body('小業態マスタの取得')",
+                                "schema": {
+                                    "properties": {
+                                        "@@attributes": {
+                                            "properties": {
+                                                "api_version": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "type": "object"
+                                        },
+                                        "category_s": {
+                                            "items": {
+                                                "properties": {
+                                                    "category_l_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "category_s_code": {
+                                                        "type": "string"
+                                                    },
+                                                    "category_s_name": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "category_s_code",
+                                                    "category_s_name",
+                                                    "category_l_code"
+                                                ],
+                                                "type": "object"
+                                            },
+                                            "type": "array"
+                                        }
+                                    },
+                                    "type": "object"
+                                }
+                            },
+                            "runAfter": {
+                                "小業態マスタの取得": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "ParseJson"
+                        },
+                        "小業態マスタから検索結果を抽出": {
+                            "inputs": {
+                                "from": "@body('小業態マスタJSONの解析')?['category_s']",
+                                "where": "@contains(item()?['category_s_name'], variables('searchword'))"
+                            },
+                            "runAfter": {
+                                "小業態マスタJSONの解析": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "Query"
+                        },
+                        "小業態マスタの取得": {
+                            "inputs": {
+                                "method": "GET",
+                                "queries": {
+                                    "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
+                                },
+                                "uri": "https://api.gnavi.co.jp/master/CategorySmallSearchAPI/v3/"
+                            },
+                            "runAfter": {},
+                            "type": "Http"
+                        },
+                        "小業態マスタの検索結果が存在するか": {
+                            "actions": {
+                                "For_each_2": {
+                                    "actions": {
+                                        "検索ワードと全く同一の商業体が存在するか": {
+                                            "actions": {},
+                                            "else": {
+                                                "actions": {
+                                                    "Set_CategorySCode": {
+                                                        "inputs": {
+                                                            "name": "categorySCode",
+                                                            "value": "@{item().category_s_code}"
+                                                        },
+                                                        "runAfter": {
+                                                            "条件_4": [
+                                                                "Succeeded"
+                                                            ]
+                                                        },
+                                                        "type": "SetVariable"
+                                                    },
+                                                    "Set_CategorySName": {
+                                                        "inputs": {
+                                                            "name": "categorySName",
+                                                            "value": "@{item().category_s_name}"
+                                                        },
+                                                        "runAfter": {
+                                                            "Set_CategorySCode": [
+                                                                "Succeeded"
+                                                            ]
+                                                        },
+                                                        "type": "SetVariable"
+                                                    },
+                                                    "条件_4": {
+                                                        "actions": {
+                                                            "set_FoundCategorySExacty_true": {
+                                                                "inputs": {
+                                                                    "name": "FoundCategorySExactly",
+                                                                    "value": true
+                                                                },
+                                                                "runAfter": {},
+                                                                "type": "SetVariable"
+                                                            }
+                                                        },
+                                                        "expression": {
+                                                            "or": [{
+                                                                "equals": [
+                                                                    "@item().category_s_name",
+                                                                    "@trim(variables('searchword'))"
+                                                                ]
+                                                            }]
+                                                        },
+                                                        "runAfter": {},
+                                                        "type": "If"
+                                                    }
+                                                }
+                                            },
+                                            "expression": {
+                                                "or": [{
+                                                    "equals": [
+                                                        "@variables('FoundCategorySExactly')",
+                                                        true
+                                                    ]
+                                                }]
+                                            },
+                                            "runAfter": {},
+                                            "type": "If"
+                                        }
+                                    },
+                                    "foreach": "@body('小業態マスタから検索結果を抽出')",
+                                    "runAfter": {},
+                                    "type": "Foreach"
+                                }
+                            },
+                            "else": {
+                                "actions": {
+                                    "応答_2": {
+                                        "inputs": {
+                                            "body": {
+                                                "icon_emoji": ":kaga:",
+                                                "link_names": 1,
+                                                "text": "検索結果がありません",
+                                                "username": "lunch_bot"
+                                            },
+                                            "statusCode": 200
+                                        },
+                                        "kind": "Http",
+                                        "runAfter": {},
+                                        "type": "Response"
+                                    }
+                                }
+                            },
+                            "expression": {
+                                "and": [{
+                                    "greater": [
+                                        "@length(body('小業態マスタから検索結果を抽出'))",
+                                        0
+                                    ]
+                                }]
+                            },
+                            "runAfter": {
+                                "小業態マスタから検索結果を抽出": [
+                                    "Succeeded"
+                                ]
+                            },
+                            "type": "If"
+                        }
+                    }
+                },
+                "expression": {
+                    "and": [{
+                        "greater": [
+                            "@length(body('大業態マスタから検索結果を抽出'))",
+                            0
+                        ]
+                    }]
+                },
+                "runAfter": {
+                    "大業態マスタから検索結果を抽出": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
+            },
+            "大業態マスタ取得": {
+                "inputs": {
+                    "method": "GET",
+                    "queries": {
+                        "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
+                    },
+                    "uri": "https://api.gnavi.co.jp/master/CategoryLargeSearchAPI/v3/"
+                },
+                "runAfter": {
+                    "initialize_FoundCategorySExactly": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "応答": {
+                "inputs": {
+                    "body": {
+                        "icon_emoji": ":kaga:",
+                        "link_names": 1,
+                        "text": "*今日のランチ(ランダム)* \r\n@{variables('todayRest').name} \r\nアクセス: 初台から徒歩@{variables('todayRest').access.walk}分\r\n所在地: @{variables('todayRest').address} \r\nURL:\r\n @{variables('todayRest').url}\r\n\t検索ワード: @{variables('searchword')},\r\n\t大業態カテゴリ: @{variables('categoryLName')},\r\n\t小業態カテゴリ: @{variables('categorySName')}",
+                        "username": "lunch_bot"
+                    },
+                    "headers": {
+                        "conten-type": "application/json"
+                    },
+                    "statusCode": 200
+                },
+                "kind": "Http",
+                "runAfter": {
+                    "今日の店を取得": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Response"
+            },
+            "配列のフィルター処理": {
+                "inputs": {
+                    "from": "@variables('rest')",
+                    "where": "@equals(equals(string(item().lunch), ''), false)"
+                },
+                "runAfter": {
+                    "レストラン一覧を配列に": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Query"
+            }
+        },
+        "contentVersion": "1.0.0.0",
+        "outputs": {},
+        "parameters": {},
+        "triggers": {
+            "manual": {
+                "inputs": {
+                    "method": "POST",
+                    "schema": {
+                        "properties": {
+                            "$content": {
+                                "type": "string"
+                            },
+                            "$content-type": {
+                                "type": "string"
+                            },
+                            "$formdata": {
+                                "items": {
+                                    "properties": {
+                                        "key": {
+                                            "type": "string"
+                                        },
+                                        "value": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "key",
+                                        "value"
+                                    ],
+                                    "type": "object"
+                                },
+                                "type": "array"
+                            }
+                        },
+                        "type": "object"
+                    }
+                },
+                "kind": "Http",
+                "type": "Request"
+            }
+        }
+    }
+}
