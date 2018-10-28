@@ -46,6 +46,7 @@
                         "areacode_s": "AREAS2210",
                         "category_l": "@variables('categoryLCode')",
                         "category_s": "@variables('categorySCode')",
+                        "freeword": "@variables('freeword')",
                         "input_coordinates_mode": "2",
                         "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e",
                         "latitude": "35.6828072",
@@ -55,7 +56,7 @@
                     "uri": "https://api.gnavi.co.jp/RestSearchAPI/v3/"
                 },
                 "runAfter": {
-                    "大業態マスタの検索結果が存在するか": [
+                    "該当するカテゴリがない場合": [
                         "Succeeded"
                     ]
                 },
@@ -335,6 +336,20 @@
                 },
                 "type": "InitializeVariable"
             },
+            "initialize_freeword": {
+                "inputs": {
+                    "variables": [{
+                        "name": "freeword",
+                        "type": "String"
+                    }]
+                },
+                "runAfter": {
+                    "小業態マスタの検索結果が存在するか": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "InitializeVariable"
+            },
             "initialize_textwordObject": {
                 "inputs": {
                     "variables": [{
@@ -425,9 +440,9 @@
                 },
                 "type": "InitializeVariable"
             },
-            "大業態マスタJSONの解析": {
+            "小業態マスタJSONの解析": {
                 "inputs": {
-                    "content": "@body('大業態マスタ取得')",
+                    "content": "@body('小業態マスタの取得')",
                     "schema": {
                         "properties": {
                             "@@attributes": {
@@ -438,19 +453,23 @@
                                 },
                                 "type": "object"
                             },
-                            "category_l": {
+                            "category_s": {
                                 "items": {
                                     "properties": {
                                         "category_l_code": {
                                             "type": "string"
                                         },
-                                        "category_l_name": {
+                                        "category_s_code": {
+                                            "type": "string"
+                                        },
+                                        "category_s_name": {
                                             "type": "string"
                                         }
                                     },
                                     "required": [
-                                        "category_l_code",
-                                        "category_l_name"
+                                        "category_s_code",
+                                        "category_s_name",
+                                        "category_l_code"
                                     ],
                                     "type": "object"
                                 },
@@ -461,59 +480,117 @@
                     }
                 },
                 "runAfter": {
-                    "大業態マスタ取得": [
+                    "小業態マスタの取得": [
                         "Succeeded"
                     ]
                 },
                 "type": "ParseJson"
             },
-            "大業態マスタから検索結果を抽出": {
+            "小業態マスタから検索結果を抽出": {
                 "inputs": {
-                    "from": "@body('大業態マスタJSONの解析')?['category_l']",
-                    "where": "@contains(item()?['category_l_name'], variables('searchword'))"
+                    "from": "@body('小業態マスタJSONの解析')?['category_s']",
+                    "where": "@contains(item()?['category_s_name'], variables('searchword'))"
                 },
                 "runAfter": {
-                    "大業態マスタJSONの解析": [
+                    "小業態マスタJSONの解析": [
                         "Succeeded"
                     ]
                 },
                 "type": "Query"
             },
-            "大業態マスタの検索結果が存在するか": {
+            "小業態マスタの取得": {
+                "inputs": {
+                    "method": "GET",
+                    "queries": {
+                        "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
+                    },
+                    "uri": "https://api.gnavi.co.jp/master/CategorySmallSearchAPI/v3/"
+                },
+                "runAfter": {
+                    "initialize_FoundCategorySExactly": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "Http"
+            },
+            "小業態マスタの検索結果が存在するか": {
                 "actions": {
-                    "For_each": {
+                    "For_each_21": {
                         "actions": {
-                            "set_categoryLCode": {
-                                "inputs": {
-                                    "name": "categoryLCode",
-                                    "value": "@{item().category_l_code}"
+                            "検索ワードと全く同一の商業体が存在するか": {
+                                "actions": {},
+                                "else": {
+                                    "actions": {
+                                        "Set_CategorySsCode": {
+                                            "inputs": {
+                                                "name": "categorySCode",
+                                                "value": "@{item().category_s_code}"
+                                            },
+                                            "runAfter": {
+                                                "条件_41": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable"
+                                        },
+                                        "Set_CategorySsName": {
+                                            "inputs": {
+                                                "name": "categorySName",
+                                                "value": "@{item().category_s_name}"
+                                            },
+                                            "runAfter": {
+                                                "Set_CategorySsCode": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable"
+                                        },
+                                        "条件_41": {
+                                            "actions": {
+                                                "set_FoundCategorySsExacty_true": {
+                                                    "inputs": {
+                                                        "name": "FoundCategorySExactly",
+                                                        "value": true
+                                                    },
+                                                    "runAfter": {},
+                                                    "type": "SetVariable"
+                                                }
+                                            },
+                                            "expression": {
+                                                "or": [{
+                                                    "equals": [
+                                                        "@item().category_s_name",
+                                                        "@trim(variables('searchword'))"
+                                                    ]
+                                                }]
+                                            },
+                                            "runAfter": {},
+                                            "type": "If"
+                                        }
+                                    }
+                                },
+                                "expression": {
+                                    "or": [{
+                                        "equals": [
+                                            "@variables('FoundCategorySExactly')",
+                                            true
+                                        ]
+                                    }]
                                 },
                                 "runAfter": {},
-                                "type": "SetVariable"
-                            },
-                            "set_categoryLName": {
-                                "inputs": {
-                                    "name": "categoryLName",
-                                    "value": "@{item().category_l_name}"
-                                },
-                                "runAfter": {
-                                    "set_categoryLCode": [
-                                        "Succeeded"
-                                    ]
-                                },
-                                "type": "SetVariable"
+                                "type": "If"
                             }
                         },
-                        "foreach": "@body('大業態マスタから検索結果を抽出')",
+                        "foreach": "@body('小業態マスタから検索結果を抽出')",
                         "runAfter": {},
                         "type": "Foreach"
                     }
                 },
                 "else": {
                     "actions": {
-                        "小業態マスタJSONの解析": {
+                        "大業態マスタJSONの解析": {
                             "inputs": {
-                                "content": "@body('小業態マスタの取得')",
+                                "content": "@body('大業態マスタ取得')",
                                 "schema": {
                                     "properties": {
                                         "@@attributes": {
@@ -524,23 +601,19 @@
                                             },
                                             "type": "object"
                                         },
-                                        "category_s": {
+                                        "category_l": {
                                             "items": {
                                                 "properties": {
                                                     "category_l_code": {
                                                         "type": "string"
                                                     },
-                                                    "category_s_code": {
-                                                        "type": "string"
-                                                    },
-                                                    "category_s_name": {
+                                                    "category_l_name": {
                                                         "type": "string"
                                                     }
                                                 },
                                                 "required": [
-                                                    "category_s_code",
-                                                    "category_s_name",
-                                                    "category_l_code"
+                                                    "category_l_code",
+                                                    "category_l_name"
                                                 ],
                                                 "type": "object"
                                             },
@@ -551,172 +624,96 @@
                                 }
                             },
                             "runAfter": {
-                                "小業態マスタの取得": [
+                                "大業態マスタ取得": [
                                     "Succeeded"
                                 ]
                             },
                             "type": "ParseJson"
                         },
-                        "小業態マスタから検索結果を抽出": {
+                        "大業態マスタから検索結果を抽出": {
                             "inputs": {
-                                "from": "@body('小業態マスタJSONの解析')?['category_s']",
-                                "where": "@contains(item()?['category_s_name'], variables('searchword'))"
+                                "from": "@body('大業態マスタJSONの解析')?['category_l']",
+                                "where": "@contains(item()?['category_l_name'], variables('searchword'))"
                             },
                             "runAfter": {
-                                "小業態マスタJSONの解析": [
+                                "大業態マスタJSONの解析": [
                                     "Succeeded"
                                 ]
                             },
                             "type": "Query"
                         },
-                        "小業態マスタの取得": {
-                            "inputs": {
-                                "method": "GET",
-                                "queries": {
-                                    "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
-                                },
-                                "uri": "https://api.gnavi.co.jp/master/CategorySmallSearchAPI/v3/"
-                            },
-                            "runAfter": {},
-                            "type": "Http"
-                        },
-                        "小業態マスタの検索結果が存在するか": {
+                        "大業態マスタの検索結果が存在するか": {
                             "actions": {
-                                "For_each_2": {
+                                "For_each": {
                                     "actions": {
-                                        "検索ワードと全く同一の商業体が存在するか": {
-                                            "actions": {},
-                                            "else": {
-                                                "actions": {
-                                                    "Set_CategorySCode": {
-                                                        "inputs": {
-                                                            "name": "categorySCode",
-                                                            "value": "@{item().category_s_code}"
-                                                        },
-                                                        "runAfter": {
-                                                            "条件_4": [
-                                                                "Succeeded"
-                                                            ]
-                                                        },
-                                                        "type": "SetVariable"
-                                                    },
-                                                    "Set_CategorySName": {
-                                                        "inputs": {
-                                                            "name": "categorySName",
-                                                            "value": "@{item().category_s_name}"
-                                                        },
-                                                        "runAfter": {
-                                                            "Set_CategorySCode": [
-                                                                "Succeeded"
-                                                            ]
-                                                        },
-                                                        "type": "SetVariable"
-                                                    },
-                                                    "条件_4": {
-                                                        "actions": {
-                                                            "set_FoundCategorySExacty_true": {
-                                                                "inputs": {
-                                                                    "name": "FoundCategorySExactly",
-                                                                    "value": true
-                                                                },
-                                                                "runAfter": {},
-                                                                "type": "SetVariable"
-                                                            }
-                                                        },
-                                                        "expression": {
-                                                            "or": [{
-                                                                "equals": [
-                                                                    "@item().category_s_name",
-                                                                    "@trim(variables('searchword'))"
-                                                                ]
-                                                            }]
-                                                        },
-                                                        "runAfter": {},
-                                                        "type": "If"
-                                                    }
-                                                }
-                                            },
-                                            "expression": {
-                                                "or": [{
-                                                    "equals": [
-                                                        "@variables('FoundCategorySExactly')",
-                                                        true
-                                                    ]
-                                                }]
+                                        "set_categoryLCode": {
+                                            "inputs": {
+                                                "name": "categoryLCode",
+                                                "value": "@{item().category_l_code}"
                                             },
                                             "runAfter": {},
-                                            "type": "If"
+                                            "type": "SetVariable"
+                                        },
+                                        "set_categoryLName": {
+                                            "inputs": {
+                                                "name": "categoryLName",
+                                                "value": "@{item().category_l_name}"
+                                            },
+                                            "runAfter": {
+                                                "set_categoryLCode": [
+                                                    "Succeeded"
+                                                ]
+                                            },
+                                            "type": "SetVariable"
                                         }
                                     },
-                                    "foreach": "@body('小業態マスタから検索結果を抽出')",
+                                    "foreach": "@body('大業態マスタから検索結果を抽出')",
                                     "runAfter": {},
                                     "type": "Foreach"
-                                }
-                            },
-                            "else": {
-                                "actions": {
-                                    "応答_2": {
-                                        "inputs": {
-                                            "body": {
-                                                "icon_emoji": ":kaga:",
-                                                "link_names": 1,
-                                                "text": "検索結果がありません",
-                                                "username": "lunch_bot"
-                                            },
-                                            "statusCode": 200
-                                        },
-                                        "kind": "Http",
-                                        "runAfter": {},
-                                        "type": "Response"
-                                    }
                                 }
                             },
                             "expression": {
                                 "and": [{
                                     "greater": [
-                                        "@length(body('小業態マスタから検索結果を抽出'))",
+                                        "@length(body('大業態マスタから検索結果を抽出'))",
                                         0
                                     ]
                                 }]
                             },
                             "runAfter": {
-                                "小業態マスタから検索結果を抽出": [
+                                "大業態マスタから検索結果を抽出": [
                                     "Succeeded"
                                 ]
                             },
                             "type": "If"
+                        },
+                        "大業態マスタ取得": {
+                            "inputs": {
+                                "method": "GET",
+                                "queries": {
+                                    "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
+                                },
+                                "uri": "https://api.gnavi.co.jp/master/CategoryLargeSearchAPI/v3/"
+                            },
+                            "runAfter": {},
+                            "type": "Http"
                         }
                     }
                 },
                 "expression": {
                     "and": [{
                         "greater": [
-                            "@length(body('大業態マスタから検索結果を抽出'))",
+                            "@length(body('小業態マスタから検索結果を抽出'))",
                             0
                         ]
                     }]
                 },
                 "runAfter": {
-                    "大業態マスタから検索結果を抽出": [
+                    "小業態マスタから検索結果を抽出": [
                         "Succeeded"
                     ]
                 },
                 "type": "If"
-            },
-            "大業態マスタ取得": {
-                "inputs": {
-                    "method": "GET",
-                    "queries": {
-                        "keyid": "710c8dcf3f57d90f47b4a04b4f7a986e"
-                    },
-                    "uri": "https://api.gnavi.co.jp/master/CategoryLargeSearchAPI/v3/"
-                },
-                "runAfter": {
-                    "initialize_FoundCategorySExactly": [
-                        "Succeeded"
-                    ]
-                },
-                "type": "Http"
             },
             "応答": {
                 "inputs": {
@@ -738,6 +735,57 @@
                     ]
                 },
                 "type": "Response"
+            },
+            "応答_2": {
+                "inputs": {
+                    "body": {
+                        "icon_emoji": ":kaga:",
+                        "link_names": 1,
+                        "text": "検索結果がありません",
+                        "username": "lunch_bot"
+                    },
+                    "statusCode": 200
+                },
+                "kind": "Http",
+                "runAfter": {
+                    "HTTP": [
+                        "Failed"
+                    ]
+                },
+                "type": "Response"
+            },
+            "該当するカテゴリがない場合": {
+                "actions": {
+                    "set_freeword": {
+                        "inputs": {
+                            "name": "freeword",
+                            "value": "@variables('searchword')"
+                        },
+                        "runAfter": {},
+                        "type": "SetVariable"
+                    }
+                },
+                "expression": {
+                    "and": [{
+                            "equals": [
+                                "@variables('categorySCode')",
+                                ""
+                            ]
+                        },
+                        {
+                            "equals": [
+                                "@variables('categoryLCode')",
+                                ""
+                            ]
+                        }
+                    ]
+                },
+                "runAfter": {
+                    "initialize_freeword": [
+                        "Succeeded"
+                    ]
+                },
+                "type": "If"
             },
             "配列のフィルター処理": {
                 "inputs": {
